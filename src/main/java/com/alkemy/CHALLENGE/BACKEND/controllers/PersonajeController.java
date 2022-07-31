@@ -4,12 +4,15 @@ import com.alkemy.CHALLENGE.BACKEND.dtos.PersonajeDTO;
 import com.alkemy.CHALLENGE.BACKEND.models.Pelicula;
 import com.alkemy.CHALLENGE.BACKEND.models.Personaje;
 import com.alkemy.CHALLENGE.BACKEND.models.PersonajePelicula;
+import com.alkemy.CHALLENGE.BACKEND.models.Usuario;
 import com.alkemy.CHALLENGE.BACKEND.services.PeliculaService;
 import com.alkemy.CHALLENGE.BACKEND.services.PersonajePeliculaService;
 import com.alkemy.CHALLENGE.BACKEND.services.PersonajeService;
+import com.alkemy.CHALLENGE.BACKEND.services.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,12 +25,12 @@ public class PersonajeController {
 
     @Autowired
     private PersonajeService personajeService;
-
     @Autowired
     private PeliculaService peliculaService;
-
     @Autowired
     private PersonajePeliculaService personajePeliculaService;
+    @Autowired
+    private UsuarioService usuarioService;
 
 
     @GetMapping()
@@ -38,22 +41,29 @@ public class PersonajeController {
 
     @PostMapping()
     public ResponseEntity<Object> crearPersonaje (@RequestParam String imagen, @RequestParam String nombre, @RequestParam Integer edad,
-                                                  @RequestParam String peso, @RequestParam String historia){
+                                                  @RequestParam String peso, @RequestParam String historia, Authentication authentication){
 
-//        Pelicula pelicula = peliculaService.traerPelicula(idMovie);
+        Usuario usuario = usuarioService.traerUsuarioAutenticado(authentication);
+
+        if (usuario == null) {
+            return new ResponseEntity<>("Usuario no autorizado", HttpStatus.FORBIDDEN);
+        }
 
         Personaje nuevoPersonaje = new Personaje(imagen, nombre, edad, peso, historia);
         personajeService.guardarPersonaje(nuevoPersonaje);
-
-//        PersonajePelicula nuevaCombinacion = new PersonajePelicula(nuevoPersonaje, pelicula);
-//        personajePeliculaService.guardarPersonajePelicula(nuevaCombinacion);
 
         return new ResponseEntity<>("Personaje creado", HttpStatus.CREATED);
     }
 
     @PatchMapping("/{id}")
     public ResponseEntity<Object> modificarPersonaje (@PathVariable Long id, @RequestParam String imagen, @RequestParam String nombre, @RequestParam Integer edad,
-                                                      @RequestParam String peso, @RequestParam String historia){
+                                                      @RequestParam String peso, @RequestParam String historia, Authentication authentication){
+
+        Usuario usuario = usuarioService.traerUsuarioAutenticado(authentication);
+
+        if (usuario == null) {
+            return new ResponseEntity<>("Usuario no autorizado", HttpStatus.FORBIDDEN);
+        }
 
         Personaje personaje = personajeService.traerPersonaje(id);
 
@@ -69,7 +79,13 @@ public class PersonajeController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Object> modificarPersonaje (@PathVariable Long id){
+    public ResponseEntity<Object> eliminarPersonaje (@PathVariable Long id, Authentication authentication){
+
+        Usuario usuario = usuarioService.traerUsuarioAutenticado(authentication);
+
+        if (usuario == null) {
+            return new ResponseEntity<>("Usuario no autorizado", HttpStatus.FORBIDDEN);
+        }
 
         Personaje personaje = personajeService.traerPersonaje(id);
 
@@ -79,7 +95,6 @@ public class PersonajeController {
 
         return new ResponseEntity<>("Personaje eliminado", HttpStatus.ACCEPTED);
     }
-
 
     @GetMapping(params = "name")
     public List<PersonajeDTO> traerPersonajePorNombre(@RequestParam String name){
@@ -108,7 +123,5 @@ public class PersonajeController {
 
         return personajeSet.stream().map(PersonajeDTO::new).collect(Collectors.toList());
     }
-
-
 
 }

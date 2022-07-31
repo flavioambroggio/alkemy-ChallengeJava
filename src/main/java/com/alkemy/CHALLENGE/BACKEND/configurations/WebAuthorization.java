@@ -29,7 +29,7 @@ class WebAuthorization {
                 .antMatchers(HttpMethod.PATCH, "/**").hasAuthority("ADMIN")
                 .antMatchers(HttpMethod.DELETE, "/**").hasAuthority("ADMIN")
 
-                .antMatchers(HttpMethod.GET,"/**").hasAuthority("USER");
+                .antMatchers(HttpMethod.GET,"/**").hasAnyAuthority("USER", "ADMIN");
 
 
         http.formLogin()

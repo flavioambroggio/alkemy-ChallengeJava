@@ -28,6 +28,8 @@ public class ChallengeBackendApplication {
 
 			Usuario usuario = new Usuario("Flavio", "Ambroggio", "fla@ambro.com", passwordEncoder.encode("1234"));
 			usuarioRepository.save(usuario);
+			Usuario admin = new Usuario("Admin", "Admin", "admin@admin.com", passwordEncoder.encode("123admin"));
+			usuarioRepository.save(admin);
 
 			Personaje personaje1 = new Personaje("https://www.quever.news/u/fotografias/m/2022/5/24/f768x1-30159_30286_5050.jpg", "Elsa", 25, "Principal", "historia");
 			personajeRepository.save(personaje1);

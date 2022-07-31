@@ -1,19 +1,14 @@
 package com.alkemy.CHALLENGE.BACKEND.controllers;
 
 import com.alkemy.CHALLENGE.BACKEND.dtos.PeliculaDTO;
-import com.alkemy.CHALLENGE.BACKEND.models.Genero;
-import com.alkemy.CHALLENGE.BACKEND.models.Pelicula;
-import com.alkemy.CHALLENGE.BACKEND.models.Personaje;
-import com.alkemy.CHALLENGE.BACKEND.models.PersonajePelicula;
-import com.alkemy.CHALLENGE.BACKEND.services.GeneroService;
-import com.alkemy.CHALLENGE.BACKEND.services.PeliculaService;
-import com.alkemy.CHALLENGE.BACKEND.services.PersonajePeliculaService;
-import com.alkemy.CHALLENGE.BACKEND.services.PersonajeService;
+import com.alkemy.CHALLENGE.BACKEND.models.*;
+import com.alkemy.CHALLENGE.BACKEND.services.*;
 import org.hibernate.mapping.Collection;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -31,6 +26,8 @@ public class PeliculaController {
     private PersonajePeliculaService personajePeliculaService;
     @Autowired
     private GeneroService generoService;
+    @Autowired
+    private UsuarioService usuarioService;
 
 
     @GetMapping()
@@ -41,7 +38,13 @@ public class PeliculaController {
 
     @PostMapping()
     public ResponseEntity<Object> crearPelicula (@RequestParam String imagen, @RequestParam String titulo, @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate fechaDeCreacion,
-                                                 @RequestParam Integer calificacion, @RequestParam Long idGenero, @RequestParam List<Long> idsPersonajes){
+                                                 @RequestParam Integer calificacion, @RequestParam Long idGenero, @RequestParam List<Long> idsPersonajes, Authentication authentication){
+
+        Usuario usuario = usuarioService.traerUsuarioAutenticado(authentication);
+
+        if (usuario == null) {
+            return new ResponseEntity<>("Usuario no autorizado", HttpStatus.FORBIDDEN);
+        }
 
         Genero genero = generoService.traerGenero(idGenero);
         List<Personaje> personajes = personajeService.traerPersonajesPorId(idsPersonajes);
@@ -52,13 +55,19 @@ public class PeliculaController {
         List<PersonajePelicula> combinaciones = personajes.stream().map(personaje -> new PersonajePelicula(personaje,nuevaPelicula)).collect(Collectors.toList());
         combinaciones.forEach(personajePelicula -> personajePeliculaService.guardarPersonajePelicula(personajePelicula));
 
-        return new ResponseEntity<>("Pelicula creado", HttpStatus.CREATED);
+        return new ResponseEntity<>("Pelicula creada", HttpStatus.CREATED);
     }
 
     @PatchMapping("/{id}")
     public ResponseEntity<Object> ModificarPelicula (@PathVariable Long id, @RequestParam String imagen, @RequestParam String titulo,
                                                      @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate fechaDeCreacion,
-                                                     @RequestParam Integer calificacion, @RequestParam Long idGenero){
+                                                     @RequestParam Integer calificacion, @RequestParam Long idGenero, Authentication authentication){
+
+        Usuario usuario = usuarioService.traerUsuarioAutenticado(authentication);
+
+        if (usuario == null) {
+            return new ResponseEntity<>("Usuario no autorizado", HttpStatus.FORBIDDEN);
+        }
 
         Pelicula pelicula = peliculaService.traerPelicula(id);
         Genero genero = generoService.traerGenero(idGenero);
@@ -74,7 +83,13 @@ public class PeliculaController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Object> eliminarPelicula (@PathVariable Long id){
+    public ResponseEntity<Object> eliminarPelicula (@PathVariable Long id, Authentication authentication){
+
+        Usuario usuario = usuarioService.traerUsuarioAutenticado(authentication);
+
+        if (usuario == null) {
+            return new ResponseEntity<>("Usuario no autorizado", HttpStatus.FORBIDDEN);
+        }
 
         Pelicula pelicula = peliculaService.traerPelicula(id);
 
@@ -87,7 +102,13 @@ public class PeliculaController {
 
 
     @PostMapping("/{idMovie}/characters/{idCharacter}")
-    public ResponseEntity<Object> agregarPersonaje (@PathVariable Long idMovie, @PathVariable Long idCharacter){
+    public ResponseEntity<Object> agregarPersonaje (@PathVariable Long idMovie, @PathVariable Long idCharacter, Authentication authentication){
+
+        Usuario usuario = usuarioService.traerUsuarioAutenticado(authentication);
+
+        if (usuario == null) {
+            return new ResponseEntity<>("Usuario no autorizado", HttpStatus.FORBIDDEN);
+        }
 
         Personaje personaje = personajeService.traerPersonaje(idCharacter);
         Pelicula pelicula = peliculaService.traerPelicula(idMovie);
@@ -99,7 +120,13 @@ public class PeliculaController {
     }
 
     @DeleteMapping("/{idMovie}/characters/{idCharacter}")
-    public ResponseEntity<Object> eliminarPersonaje (@PathVariable Long idMovie, @PathVariable Long idCharacter){
+    public ResponseEntity<Object> eliminarPersonaje (@PathVariable Long idMovie, @PathVariable Long idCharacter, Authentication authentication){
+
+        Usuario usuario = usuarioService.traerUsuarioAutenticado(authentication);
+
+        if (usuario == null) {
+            return new ResponseEntity<>("Usuario no autorizado", HttpStatus.FORBIDDEN);
+        }
 
         Pelicula pelicula = peliculaService.traerPelicula(idMovie);
         if(pelicula == null){
